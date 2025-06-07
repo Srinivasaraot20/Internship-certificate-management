@@ -1,0 +1,304 @@
+
+{% extends "base.html" %}
+
+{% block title %}Certificates Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Certificates Management</h1>
+            <p class="text-muted">Manage and monitor certificate generation and distribution</p>
+        </div>
+        <div>
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger">
+                <i class="fas fa-sign-out-alt me-2"></i>Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-2">
+                            <form method="POST" action="{{ url_for('generate_certificates') }}" class="d-inline w-100">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-file-pdf me-2"></i>Generate Certificates
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-2">
+                            <form method="POST" action="{{ url_for('send_certificates') }}" class="d-inline w-100">
+                                <button type="submit" class="btn btn-info w-100">
+                                    <i class="fas fa-envelope me-2"></i>Send Certificates
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-3">
+                            <form method="POST" action="{{ url_for('generate_and_send_certificates') }}" class="d-inline w-100">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-magic me-2"></i>Generate & Send All
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{{ url_for('upload_excel') }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-upload me-2"></i>Upload Data
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-dashboard me-2"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search_query }}" placeholder="Name, Roll Number, Email, or Certificate ID">
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status Filter</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All Statuses</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="generated" {% if status_filter == 'generated' %}selected{% endif %}>Generated</option>
+                        <option value="sent" {% if status_filter == 'sent' %}selected{% endif %}>Sent</option>
+                        <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Filter
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <a href="{{ url_for('admin_certificates') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Clear Filters
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Certificates Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>Students & Certificates
+                <span class="badge bg-secondary ms-2">{{ students.total }} total</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if students.items %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Student Details</th>
+                                <th>Internship Info</th>
+                                <th>Certificate</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students.items %}
+                            <tr>
+                                <td>
+                                    <div>
+                                        <h6 class="mb-1">{{ student.student_name }}</h6>
+                                        <small class="text-muted">{{ student.roll_number }}</small><br>
+                                        <small class="text-muted">{{ student.email }}</small><br>
+                                        <small class="text-muted">{{ student.college_name }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ student.internship_name }}</strong><br>
+                                        <small class="text-muted">{{ student.company_name }}</small><br>
+                                        <small class="text-muted">
+                                            {{ student.internship_start_date.strftime('%d/%m/%Y') }} - 
+                                            {{ student.internship_end_date.strftime('%d/%m/%Y') }}
+                                        </small><br>
+                                        <small class="text-muted">{{ student.duration_weeks }} weeks</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ student.certificate_id }}</small><br>
+                                    {% if student.date_of_issue %}
+                                        <small class="text-muted">Issued: {{ student.date_of_issue.strftime('%d/%m/%Y') }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if student.certificate_status.value == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% elif student.certificate_status.value == 'generated' %}
+                                        <span class="badge bg-info">Generated</span>
+                                    {% elif student.certificate_status.value == 'sent' %}
+                                        <span class="badge bg-success">Sent</span>
+                                    {% elif student.certificate_status.value == 'failed' %}
+                                        <span class="badge bg-danger">Failed</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group-vertical" role="group">
+                                        {% if student.certificate_status.value in ['generated', 'sent'] %}
+                                            <a href="{{ url_for('admin_download_certificate', certificate_id=student.certificate_id) }}" 
+                                               class="btn btn-sm btn-primary mb-1">
+                                                <i class="fas fa-download me-1"></i>Download
+                                            </a>
+                                            <a href="{{ url_for('view_certificate', certificate_id=student.certificate_id) }}" 
+                                               class="btn btn-sm btn-info mb-1" target="_blank">
+                                                <i class="fas fa-eye me-1"></i>View
+                                            </a>
+                                        {% endif %}
+                                        
+                                        {% if student.certificate_status.value == 'generated' %}
+                                            <form method="POST" action="{{ url_for('send_certificates') }}" class="d-inline">
+                                                <input type="hidden" name="student_id" value="{{ student.id }}">
+                                                <button type="submit" class="btn btn-sm btn-success mb-1">
+                                                    <i class="fas fa-envelope me-1"></i>Send
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        
+                                        {% if student.certificate_status.value == 'pending' %}
+                                            <form method="POST" action="{{ url_for('generate_certificates') }}" class="d-inline">
+                                                <input type="hidden" name="student_id" value="{{ student.id }}">
+                                                <button type="submit" class="btn btn-sm btn-warning mb-1">
+                                                    <i class="fas fa-cog me-1"></i>Generate
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        
+                                        <a href="{{ url_for('verify_certificate') }}?certificate_id={{ student.certificate_id }}" 
+                                           class="btn btn-sm btn-outline-secondary" target="_blank">
+                                            <i class="fas fa-search me-1"></i>Verify
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No students found</h5>
+                    <p class="text-muted">Upload student data or adjust your filters</p>
+                    <a href="{{ url_for('upload_excel') }}" class="btn btn-primary">
+                        <i class="fas fa-upload me-2"></i>Upload Student Data
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if students.pages > 1 %}
+        <div class="card-footer bg-transparent">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <small class="text-muted">
+                        Showing {{ students.per_page * (students.page - 1) + 1 }} to 
+                        {{ students.per_page * (students.page - 1) + students.items|length }} of 
+                        {{ students.total }} entries
+                    </small>
+                </div>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if students.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_certificates', page=students.prev_num, status=status_filter, search=search_query) }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in students.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=1) %}
+                            {% if page_num %}
+                                {% if page_num != students.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin_certificates', page=page_num, status=status_filter, search=search_query) }}">
+                                            {{ page_num }}
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if students.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_certificates', page=students.next_num, status=status_filter, search=search_query) }}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.btn-group-vertical .btn {
+    border-radius: 0.25rem !important;
+    margin-bottom: 2px;
+}
+
+.btn-group-vertical .btn:last-child {
+    margin-bottom: 0;
+}
+
+.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.table-responsive {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+</style>
+{% endblock %}

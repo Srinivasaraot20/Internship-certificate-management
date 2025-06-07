@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Admin Dashboard</h1>
+            <p class="text-muted">Certificate Management System Overview</p>
+        </div>
+        <div>
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger">
+                <i class="fas fa-sign-out-alt me-2"></i>Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-gradient rounded-3 p-3">
+                                <i class="fas fa-users text-white fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Total Students</h6>
+                            <h3 class="mb-0">{{ stats.total_students }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-gradient rounded-3 p-3">
+                                <i class="fas fa-certificate text-white fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Generated Certificates</h6>
+                            <h3 class="mb-0">{{ stats.generated_certificates }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-gradient rounded-3 p-3">
+                                <i class="fas fa-envelope text-white fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Sent Certificates</h6>
+                            <h3 class="mb-0">{{ stats.sent_certificates }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-gradient rounded-3 p-3">
+                                <i class="fas fa-clock text-white fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Pending</h6>
+                            <h3 class="mb-0">{{ stats.pending_certificates }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a href="{{ url_for('upload_excel') }}" class="btn btn-primary w-100">
+                                <i class="fas fa-upload me-2"></i>Upload Students
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <form method="POST" action="{{ url_for('generate_certificates') }}" class="d-inline w-100">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-file-pdf me-2"></i>Generate Certificates
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-3">
+                            <form method="POST" action="{{ url_for('generate_and_send_certificates') }}" class="d-inline w-100">
+                                <button type="submit" class="btn btn-info w-100">
+                                    <i class="fas fa-magic me-2"></i>Generate & Send
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('admin_certificates') }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-list me-2"></i>View All Certificates
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Recent Uploads
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_uploads %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>File Name</th>
+                                        <th>Status</th>
+                                        <th>Upload Time</th>
+                                        <th>Records</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for upload in recent_uploads %}
+                                    <tr>
+                                        <td>{{ upload.filename }}</td>
+                                        <td>
+                                            {% if upload.status == 'completed' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% elif upload.status == 'processing' %}
+                                                <span class="badge bg-warning">Processing</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">{{ upload.status.title() }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ upload.upload_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ upload.successful_records or 0 }}/{{ upload.total_records or 0 }}
+                                            </small>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No recent uploads found</p>
+                            <a href="{{ url_for('upload_excel') }}" class="btn btn-primary">
+                                <i class="fas fa-upload me-2"></i>Upload First File
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Certificate Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="h2 text-success mb-1">{{ stats.sent_certificates }}</div>
+                                <small class="text-muted">Sent</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="h2 text-warning mb-1">{{ stats.pending_certificates }}</div>
+                                <small class="text-muted">Pending</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="h2 text-info mb-1">{{ stats.generated_certificates }}</div>
+                                <small class="text-muted">Generated</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="h2 text-danger mb-1">{{ stats.failed_certificates }}</div>
+                                <small class="text-muted">Failed</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if stats.total_students > 0 %}
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small text-muted">Success Rate</span>
+                            <span class="small fw-medium">{{ "%.1f"|format(stats.success_rate) }}%</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: {{ stats.success_rate }}%"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Verifications -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-search me-2"></i>Recent Verifications
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_verifications %}
+                        {% for verification in recent_verifications[:5] %}
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="bg-light rounded-circle p-2">
+                                    <i class="fas fa-qrcode text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1">{{ verification.student.student_name }}</h6>
+                                <small class="text-muted">{{ verification.verification_time.strftime('%H:%M') }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-search fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No recent verifications</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+</style>
+{% endblock %}
